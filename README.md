@@ -561,3 +561,341 @@ function recordPlayerTurn(player, steps, points) {
     newRow.insertCell().textContent = steps; 
     newRow.insertCell().textContent = points; 
 }
+
+/* 基本重置和字體設定 */
+body {
+    font-family: 'Comic Sans MS', cursive, sans-serif; 
+    background-color: #f5f0e8; 
+    color: #4a4a4a; 
+    margin: 0;
+    padding: 10px; 
+    text-align: center;
+    min-height: 100vh; 
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background-color: #8b4513; 
+    color: white;
+    padding: 15px; 
+    margin-bottom: 15px;
+    border-radius: 8px; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.controls {
+    text-align: center;
+    padding: 10px;
+    margin-bottom: 15px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.main-layout-container {
+    display: flex;
+    flex: 1; 
+    gap: 15px;
+    max-width: 1400px; 
+    margin: 0 auto;
+    width: 100%;
+}
+
+.side-panel {
+    width: 250px; 
+    background-color: #fff;
+    border: 3px solid #a07a4a;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; 
+}
+#players-list-container { order: 1; }
+#score-info-container { order: 3; }
+
+.center-map-area {
+    flex: 1; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    order: 2; 
+    min-width: 500px; 
+}
+
+/* 地圖容器 - 5x4 網格佈局 */
+.map-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); 
+    grid-template-rows: repeat(4, minmax(60px, 1fr)); 
+    gap: 5px; 
+    padding: 15px;
+    background-color: #c9b79c; 
+    width: 100%; 
+    max-width: 750px; 
+    aspect-ratio: 5 / 4.5; 
+    margin: 0; 
+    position: relative; 
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3); 
+}
+
+/* 地圖背景圖案 */
+.map-container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none; 
+    
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Ctext x='50%25' y='50%25' font-size='30' text-anchor='middle' alignment-baseline='middle'%3E%F0%9F%8C%B4%3C/text%3E%3C/svg%3E"), 
+                      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Ctext x='50%25' y='50%25' font-size='30' text-anchor='middle' alignment-baseline='middle'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E"),
+                      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Ctext x='50%25' y='50%25' font-size='30' text-anchor='middle' alignment-baseline='middle'%3E%E2%98%A0%EF%B8%8F%3C/text%3E%3C/svg%3E");
+
+    background-repeat: repeat;
+    background-size: 100px 100px, 120px 120px, 80px 80px;
+    background-position: 0 0, 50px 50px, 25px 25px;
+
+    opacity: 0.15;
+    filter: sepia(0.8) grayscale(0.5); 
+}
+
+/* 地圖格子樣式 */
+.cell {
+    border: 2px solid #6b4c3b; 
+    background-color: #f7e0b5; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    
+    font-size: 2.2em; 
+    font-weight: bold;
+    position: relative; 
+    padding: 5px;
+    overflow: hidden; 
+    border-radius: 50%; 
+    aspect-ratio: 1 / 1; 
+    z-index: 2; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    color: #4a4a4a; 
+    transition: all 0.2s; 
+    min-height: 40px; 
+    max-width: 80px; 
+    margin: auto; 
+}
+
+/* 點數顏色標記 */
+.cell-points-1 { background-color: #c8e6c9; } 
+.cell-points-2 { background-color: #fff9c4; } 
+.cell-points-3 { background-color: #ffccbc; } 
+
+/* 終點寶藏箱樣式 (ID: 19) */
+#cell-19 { /* 🎯 修正: 更改 ID 為 19 */
+    background-color: gold; 
+    font-size: 2.2em; 
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); 
+    transform: none; 
+}
+#cell-19::before { /* 🎯 修正: 更改 ID 為 19 */
+    content: "💰"; 
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2em;
+}
+
+/* 路徑 SVG 樣式 - 確保直角 */
+.path-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; 
+    z-index: 1; 
+    overflow: hidden; 
+}
+.path-svg path {
+    fill: none;
+    stroke: #6b4c3b; 
+    stroke-width: 6px; 
+    
+    stroke-linecap: butt; 
+    stroke-linejoin: miter; 
+    
+    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.5)); 
+}
+
+
+/* 角色標記 (Token) 相關 */
+.token-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); 
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+    gap: 1px; 
+    z-index: 10;
+    pointer-events: none; 
+    flex-wrap: nowrap;
+}
+
+.token {
+    position: static; 
+    width: 25px; 
+    height: 25px;
+    line-height: 25px;
+    border-radius: 50%; 
+    font-size: 1em; 
+    font-weight: bold;
+    color: white;
+    border: 2px solid white;
+    z-index: 1; 
+    transition: all 0.6s ease-in-out; 
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); 
+    flex-shrink: 0; 
+}
+
+/* =================================================== */
+/* 🎯 START: 您提供的骰子和點數提示樣式 (已整合) */
+/* =================================================== */
+
+/* 骰子/點數 滾動動畫疊層 */
+#overlay-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* 提高 Z-index 確保覆蓋一切 */
+    backdrop-filter: blur(5px); 
+}
+
+/* 骰子顯示 (位於 #display-content 內) */
+#dice-display {
+    width: 150px;
+    height: 150px;
+    background-color: white;
+    border-radius: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 6em; 
+    color: #8b4513;
+    border: 5px solid gold;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+    animation: bounce 0.5s infinite alternate; 
+}
+
+/* 點數提示框樣式 */
+#points-display {
+    width: 280px; 
+    height: 150px;
+    background-color: white;
+    border-radius: 25px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 2.2em; 
+    color: #8b4513;
+    border: 5px solid #3498db; 
+    box-shadow: 0 0 30px rgba(52, 152, 219, 0.5);
+    animation: fanfare 0.3s forwards; 
+    padding: 10px;
+}
+#points-display strong {
+    font-size: 3em; 
+    color: #e74c3c;
+    white-space: nowrap; 
+}
+
+/* 骰子跳動關鍵影格 */
+@keyframes bounce {
+    from {
+        transform: scale(1);
+    }
+    to {
+        transform: scale(1.1);
+    }
+}
+
+/* =================================================== */
+/* 🎯 END: 您提供的骰子和點數提示樣式 (已整合) */
+/* =================================================== */
+
+
+/* 獲勝動畫樣式 */
+#win-animation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200; 
+}
+
+#win-message {
+    background: linear-gradient(45deg, gold, yellow, #ffd700);
+    color: #8b4513;
+    padding: 40px 60px;
+    border-radius: 20px;
+    font-size: 3em;
+    font-weight: bold;
+    box-shadow: 0 0 50px gold, 0 0 20px rgba(255, 255, 0, 0.5);
+    transform: scale(0.1);
+    animation: fanfare 1s forwards cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+}
+
+@keyframes fanfare {
+    0% { transform: scale(0.1); opacity: 0; }
+    80% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* 分數表格樣式 */
+#individual-score-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 10px;
+    justify-content: space-around;
+}
+
+.player-score-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.player-score-table th, .player-score-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+}
+
+.player-score-table thead th {
+    font-size: 1.1em;
+}
