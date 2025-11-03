@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>數學藏寶圖尋寶遊戲</title>
-    <link rel="stylesheet" href="style.CSS">
+    <link rel="stylesheet" href="四則運算大挑戰-藏寶圖/style.CSS">
     </head>
 <body>
 
@@ -52,5 +52,9 @@
     </div>
 
     <script src="script.js"></script>
+</body>
+</html>
+
+    <script src="/四則運算大挑戰-藏寶圖script.js"></script>
 </body>
 </html>
